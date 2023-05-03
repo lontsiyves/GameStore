@@ -1,0 +1,97 @@
+﻿@page "/game"
+@page "/game/{id:int}"
+@using Models
+@inject NavigationManager NavigationManager
+
+<div class="container">
+<PageTitle>@title</PageTitle>
+<h1>Game Catalog</h1>
+<h3>@title</h3>
+@if (game is null)
+{
+    <p><em>Loading ...</em></p>
+} else {
+<div class="row">
+    <div class="col-sm-4">
+      <EditForm Model="@game" OnValidSubmit="saveGame">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="mb-3">
+          <label for="name" class="form-label">Name:</label>
+          <InputText id="name" class="form-control" @bind-Value="game.Name"></InputText>
+        </div>
+        <div class="mb-3">
+          <label for="genre" class="form-label">Genre:</label>
+          <InputSelect id="genre" class="form-select" @bind-Value="game.Genre">
+            <option value="">Select Genre</option>
+            <option value="Fighting">Fighting</option>
+            <option value="kids and family">FighKids and familyting</option>
+            <option value="Racing">Racing</option>
+            <option value="Roleplaying">Roleplaying</option>
+            <option value="Sports">sports</option>
+          </InputSelect>
+        </div>
+        <div class="mb-3">
+          <label for="price" class="form-label">Price:</label>
+          <InputNumber id="price" class="form-control" @bind-Value="game.Price"></InputNumber>
+        </div>
+        <div class="mb-3">
+          <label for="date" class="form-label">Release Date:</label>
+          <InputDate id="date" class="form-control" @bind-Value="game.ReleaseDate"></InputDate>
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-secondary" @onclick="GotoHomePage">Cancel</button>
+      </EditForm>
+    </div>
+</div>
+}
+</div>
+
+@code {
+  [Parameter]
+  public int? Id {get; set;}
+private Game? game;
+private string title= string.Empty;
+
+  protected override void OnParametersSet()
+  {
+      if(Id is not null) {
+        Game foundGame = GameClient.GetGame(Id.Value);
+        game = new()
+        {
+          Id = foundGame.Id,
+          Name = foundGame.Name,
+          Genre= foundGame.Genre,
+          Price = foundGame.Price,
+          ReleaseDate = foundGame.ReleaseDate
+        };
+        title = $"Edit {game.Name}";
+      }
+      else {
+        game = new ()
+        {
+          Name= string.Empty,
+          Genre= string.Empty,
+          Price= 0,
+          ReleaseDate = DateTime.UtcNow
+        };
+        title = "Add New Game";
+
+      }
+  }
+
+  private void saveGame() {
+
+    if(game!.Id == 0) {
+      GameClient.AddGame(game);
+    } else {
+      GameClient.UpdateGame(game);
+    }
+    GotoHomePage();
+  }
+  private void GotoHomePage() {
+    NavigationManager.NavigateTo("/");
+  }
+}
+
+
